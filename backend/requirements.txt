@@ -1,8 +1,8 @@
-crewai==0.80.0
-crewai-tools==0.14.0
-langchain-community==0.3.0
-langchain-openai==0.2.0
-streamlit==1.38.0
-pypdf2==3.0.1
-python-dotenv==1.0.1
-requests==2.32.3
+crewai
+crewai-tools
+langchain-community
+langchain-openai
+streamlit
+pypdf2
+python-dotenv
+requests

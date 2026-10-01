@@ -1,63 +1,92 @@
+import json
 import os
+
 import requests
 from crewai.tools import tool
 from dotenv import load_dotenv
 
 load_dotenv()
 
-@tool("Search Jobs API")
-def search_jobs(query: str) -> str:
-    """Searches for jobs using the JSearch API. Input should be a search query like 'Software Engineer Intern New York'."""
-    url = "https://jsearch.p.rapidapi.com/search"
-    headers = {
-        "X-RapidAPI-Key": os.getenv("JSEARCH_API_KEY"),
-        "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
-    }
-    # We ask for 11 jobs to ensure we get at least 5-10 good ones after filtering
-    params = {"query": query, "page": "1", "num_pages": "1"} 
-    
-    try:
-        response = requests.get(url, headers=headers, params=params)
-        data = response.json()
-        jobs = data.get('data', [])
-        
-        formatted_jobs = []
-        for job in jobs[:11]:
-            formatted_jobs.append({
-                "title": job.get('job_title'),
-                "company": job.get('employer_name'),
-                "location": job.get('job_city', '') + ", " + job.get('job_state', ''),
-                "link": job.get('job_google_link') or job.get('job_apply_link'),
-                "description": job.get('job_description', '')[:500] # Truncate to save tokens
-            })
-        return str(formatted_jobs)
-    except Exception as e:
-        return f"Error searching jobs: {str(e)}"
+TAVILY_URL = "https://api.tavily.com/search"
 
-@tool("Search HR Contact Info")
-def search_hr_contact(company_name: str) -> str:
-    """Searches the web to find the HR contact, recruiter, or hiring manager LinkedIn profile and email for a specific company."""
-    url = "https://google.serper.dev/search"
-    payload = {
-        "q": f"{company_name} HR contact OR recruiter OR hiring manager LinkedIn email",
-        "num": 5
-    }
-    headers = {
-        'X-API-KEY': os.getenv("SERPER_API_KEY"),
-        'Content-Type': 'application/json'
-    }
-    
+
+def _search_web(query: str, max_results: int) -> list[dict]:
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        raise RuntimeError("Add TAVILY_API_KEY to backend/.env to enable web search.")
+
+    response = requests.post(
+        TAVILY_URL,
+        json={
+            "api_key": api_key,
+            "query": query,
+            "search_depth": "basic",
+            "max_results": max_results,
+            "include_answer": False,
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    return response.json().get("results", [])
+
+
+@tool("Search Jobs")
+def search_jobs(query: str) -> str:
+    """Search public web results for relevant job listings and application pages."""
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        results = response.json().get('organic', [])
-        
-        contacts = []
-        for res in results:
-            contacts.append({
-                "title": res.get('title'),
-                "link": res.get('link'),
-                "snippet": res.get('snippet')
-            })
-        return str(contacts)
-    except Exception as e:
-        return f"Error searching contacts: {str(e)}"
+        results = _search_web(f"{query} job opening careers apply", 8)
+        jobs = [
+            {
+                "title": item.get("title", "Untitled role"),
+                "company": "",
+                "location": "",
+                "link": item.get("url", ""),
+                "description": item.get("content", "")[:500],
+            }
+            for item in results
+        ]
+        return json.dumps({"jobs": jobs})
+    except Exception as error:
+        return json.dumps({"error": str(error), "jobs": []})
+
+
+@tool("Search Recruiter Contacts")
+def search_hr_contact(company_name: str) -> str:
+    """Search public web results for a company's recruiter or hiring team."""
+    try:
+        results = _search_web(
+            f"{company_name} recruiter hiring team careers LinkedIn",
+            5,
+        )
+        contacts = [
+            {
+                "name_or_page": item.get("title", ""),
+                "url": item.get("url", ""),
+                "source_summary": item.get("content", "")[:400],
+            }
+            for item in results
+        ]
+        return json.dumps({"company": company_name, "results": contacts})
+    except Exception as error:
+        return json.dumps({"company": company_name, "error": str(error), "results": []})
+
+
+@tool("Search Learning Resources")
+def search_learning_resources(skill: str) -> str:
+    """Find free, credible courses and practice resources for a specific career skill."""
+    try:
+        results = _search_web(
+            f"free course learn {skill} official documentation India students",
+            5,
+        )
+        resources = [
+            {
+                "title": item.get("title", ""),
+                "url": item.get("url", ""),
+                "summary": item.get("content", "")[:400],
+            }
+            for item in results
+        ]
+        return json.dumps({"skill": skill, "resources": resources})
+    except Exception as error:
+        return json.dumps({"skill": skill, "error": str(error), "resources": []})

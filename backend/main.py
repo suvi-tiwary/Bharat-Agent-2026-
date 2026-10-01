@@ -1,15 +1,36 @@
 from crewai import Crew, Process
-from agents import resume_agent, job_hunter_agent, contact_agent, strategist_agent
-from tasks import analyze_resume_task, find_jobs_task, find_contacts_task, strategy_task
 
-def run_crew(resume_text):
+from agents import create_agents
+from tasks import create_tasks
+
+
+def run_crew(
+    resume_text: str,
+    preferred_location: str = "India / remote",
+    response_language: str = "English",
+) -> dict[str, str]:
+    agents = create_agents()
+    tasks = create_tasks(agents, preferred_location, response_language)
     crew = Crew(
-        agents=[resume_agent, job_hunter_agent, contact_agent, strategist_agent],
-        tasks=[analyze_resume_task, find_jobs_task, find_contacts_task, strategy_task],
+        agents=agents,
+        tasks=tasks,
         process=Process.sequential,
-        verbose=True
+        verbose=False,
     )
-    
-    inputs = {"resume_text": resume_text}
-    result = crew.kickoff(inputs=inputs)
-    return result.raw
+
+    result = crew.kickoff(
+        inputs={
+            "resume_text": resume_text,
+            "preferred_location": preferred_location or "India / remote",
+            "response_language": response_language,
+        }
+    )
+    outputs = [str(output.raw) for output in result.tasks_output]
+    outputs += [""] * (5 - len(outputs))
+    return {
+        "analysis": outputs[0],
+        "job_search": outputs[1],
+        "contacts": outputs[2],
+        "learning": outputs[3],
+        "report": outputs[4],
+    }
