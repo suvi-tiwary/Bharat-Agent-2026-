@@ -5,3 +5,4 @@ langchain-community
 pypdf
 python-dotenv
 langchain-groq 
+tavily-python
