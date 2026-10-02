@@ -1,0 +1,33 @@
+                RESUME PDF
+                    │
+                    ▼
+             Resume Agent
+                    │
+                    ▼
+           Candidate Profile
+                    │
+                    ▼
+          ┌─────────────────┐
+          │ Job Search Agent│
+          └────────┬────────┘
+                   │
+             50–100 jobs
+                   │
+                   ▼
+         Job Verification Agent
+                   │
+          verified official jobs
+                   │
+                   ▼
+           Matching Agent
+                   │
+            matched jobs
+                   │
+                   ▼
+          Recruiter Agent
+                   │
+        public professional
+        recruiter information
+                   │
+                   ▼
+             FINAL RESULTS
