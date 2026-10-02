@@ -1,8 +1,0 @@
-crewai
-crewai-tools
-langchain-community
-langchain-openai
-streamlit
-pypdf2
-python-dotenv
-requests
