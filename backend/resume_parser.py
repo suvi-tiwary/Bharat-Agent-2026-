@@ -4,6 +4,7 @@ import json
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 
+
 load_dotenv()
 
 
@@ -12,14 +13,6 @@ llm = ChatGroq(
     model=os.getenv("GROQ_MODEL"),
     temperature=0
 )
-
-loader = PyPDFLoader("resume.pdf")
-documents = loader.load()
-
-text = ""
-
-for document in documents:
-    text += document.page_content
 
 def parse_resume(resume_text):
 

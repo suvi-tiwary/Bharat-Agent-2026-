@@ -21,3 +21,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+loader = PyPDFLoader(temp_path)
+documents = loader.load()
+
+resume_text = "\n".join(
+    document.page_content
+    for document in documents
+)
+
+profile = parse_resume(resume_text)
