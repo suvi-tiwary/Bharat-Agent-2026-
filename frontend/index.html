@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>JobSeek AI — Smart Job Search</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                ✦
+            </div>
+
+            <div>
+                <h2>
+                    JobSeek <span>AI</span>
+                </h2>
+
+                <p>
+                    Your Resume. Real Opportunities.
+                </p>
+            </div>
+
+        </div>
+
+
+        <nav>
+
+            <button class="nav-item active">
+                <span>⌂</span>
+                Home
+            </button>
+
+            <button class="nav-item">
+                <span>⌕</span>
+                Find Jobs
+            </button>
+
+            <button class="nav-item">
+                <span>▤</span>
+                My Applications
+            </button>
+
+            <button class="nav-item">
+                <span>♙</span>
+                Profile
+            </button>
+
+            <button class="nav-item">
+                <span>⚙</span>
+                Settings
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-spacer"></div>
+
+
+        <div class="sidebar-promo">
+
+            <div class="sparkle">
+                ✦
+            </div>
+
+            <h3>
+                Better opportunities
+                <br>
+                through smarter search.
+            </h3>
+
+            <div class="purple-wave"></div>
+
+        </div>
+
+
+        <div class="user-card">
+
+            <div class="avatar">
+                ST
+            </div>
+
+            <div>
+                <strong>Suvi Tiwari</strong>
+                <small>AI/ML Engineer</small>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main">
+
+        <!-- TOP -->
+
+        <header class="topbar">
+
+            <div></div>
+
+            <div class="top-right">
+
+                <div class="online">
+                    <span></span>
+                    AI System Online
+                </div>
+
+                <button class="round-button">
+                    ⚙
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= HERO ================= -->
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <p class="greeting">
+                    Good morning, Suvi! 👋
+                </p>
+
+                <h1>
+                    Your next dream job
+                    <br>
+                    <span>
+                        is just a few steps away.
+                    </span>
+                </h1>
+
+                <p class="hero-text">
+
+                    Upload your resume and let AI find
+                    matching jobs, verify opportunities,
+                    and research recruiting signals —
+                    all in one place.
+
+                </p>
+
+
+                <!-- REAL FILE INPUT -->
+
+                <input
+                    type="file"
+                    id="resumeInput"
+                    accept=".pdf"
+                    hidden
+                >
+
+
+                <button
+                    class="upload-button"
+                    id="uploadButton"
+                >
+
+                    <span id="uploadIcon">
+                        ↑
+                    </span>
+
+                    <span id="uploadText">
+                        Analyze My Resume
+                    </span>
+
+                    <span>
+                        ↗
+                    </span>
+
+                </button>
+
+
+                <p
+                    id="fileName"
+                    class="file-name"
+                ></p>
+
+            </div>
+
+
+            <!-- RESUME VISUAL -->
+
+            <div class="hero-visual">
+
+                <div class="orbit orbit1"></div>
+
+                <div class="orbit orbit2"></div>
+
+                <div class="resume-visual">
+
+                    <div class="resume-icon">
+                        ▤
+                    </div>
+
+                    <strong>
+                        RESUME
+                    </strong>
+
+                    <small>
+                        AI Analysis
+                    </small>
+
+                    <div class="ai-badge">
+                        ✦ AI
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= PIPELINE ================= -->
+
+        <section class="pipeline">
+
+            <div
+                class="pipeline-step completed"
+                id="stepResume"
+            >
+
+                <div class="pipeline-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <strong>
+                        1. Resume Parsed
+                    </strong>
+
+                    <small>
+                        Waiting for resume
+                    </small>
+                </div>
+
+            </div>
+
+
+            <div class="pipeline-line"></div>
+
+
+            <div
+                class="pipeline-step"
+                id="stepSearch"
+            >
+
+                <div class="pipeline-icon">
+                    2
+                </div>
+
+                <div>
+                    <strong>
+                        2. Job Search
+                    </strong>
+
+                    <small>
+                        Waiting
+                    </small>
+                </div>
+
+            </div>
+
+
+            <div class="pipeline-line"></div>
+
+
+            <div
+                class="pipeline-step"
+                id="stepResearch"
+            >
+
+                <div class="pipeline-icon">
+                    3
+                </div>
+
+                <div>
+                    <strong>
+                        3. Job Research
+                    </strong>
+
+                    <small>
+                        Waiting
+                    </small>
+                </div>
+
+            </div>
+
+
+            <div class="pipeline-line"></div>
+
+
+            <div
+                class="pipeline-step"
+                id="stepResults"
+            >
+
+                <div class="pipeline-icon">
+                    4
+                </div>
+
+                <div>
+                    <strong>
+                        4. Results
+                    </strong>
+
+                    <small>
+                        Waiting
+                    </small>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= PROFILE RESULT ================= -->
+
+        <section
+            class="profile-result"
+            id="profileResult"
+        >
+
+            <div class="profile-title">
+
+                <div class="profile-icon">
+                    ✦
+                </div>
+
+                <div>
+                    <h3>
+                        Candidate Profile
+                    </h3>
+
+                    <p>
+                        Extracted from your resume
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div
+                id="profileContent"
+                class="profile-content"
+            ></div>
+
+        </section>
+
+
+        <!-- ================= WORKSPACE ================= -->
+
+        <section class="workspace">
+
+
+            <!-- ================= JOBS ================= -->
+
+            <div class="jobs-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="title">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <h2>
+                                <span id="jobCount">
+                                    0
+                                </span>
+                                Matching Jobs
+                            </h2>
+
+                        </div>
+
+                        <p>
+                            AI-matched opportunities from your resume
+                        </p>
+
+                    </div>
+
+
+                    <button class="sort-button">
+                        Best Match
+                        <span>⌄</span>
+                    </button>
+
+                </div>
+
+
+                <!-- FILTERS -->
+
+                <div class="filters">
+
+                    <button class="filter active">
+                        All
+                    </button>
+
+                    <button class="filter">
+                        AI Engineer
+                    </button>
+
+                    <button class="filter">
+                        ML Engineer
+                    </button>
+
+                    <button class="filter">
+                        GenAI Engineer
+                    </button>
+
+                    <button class="filter">
+                        Remote
+                    </button>
+
+                    <button class="filter">
+                        Full-time
+                    </button>
+
+                </div>
+
+
+                <!-- JOBS WILL COME FROM BACKEND -->
+
+                <div
+                    id="jobList"
+                    class="job-list"
+                >
+
+                    <div class="empty-state">
+
+                        <div>
+                            ✦
+                        </div>
+
+                        <h3>
+                            Upload your resume
+                        </h3>
+
+                        <p>
+                            Your AI-matched jobs will appear here.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= JOB DETAILS ================= -->
+
+            <div
+                class="details-panel"
+                id="detailsPanel"
+            >
+
+                <div class="details-empty">
+
+                    <div class="details-empty-icon">
+                        ✦
+                    </div>
+
+                    <h3>
+                        Select a job
+                    </h3>
+
+                    <p>
+                        Choose a job from the list to see
+                        AI research, application links,
+                        and recruiting information.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ACTIVITY ================= -->
+
+        <section class="activity">
+
+            <div class="activity-title">
+
+                <span>
+                    ✦
+                </span>
+
+                <div>
+                    <strong>
+                        Recent Activity
+                    </strong>
+
+                    <small id="activityText">
+                        Upload a resume to start your AI job search.
+                    </small>
+                </div>
+
+            </div>
+
+
+            <div class="activity-flow">
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        ▤
+                    </div>
+
+                    <span>
+                        Resume
+                    </span>
+
+                </div>
+
+                <b>→</b>
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        ⌕
+                    </div>
+
+                    <span>
+                        Search
+                    </span>
+
+                </div>
+
+                <b>→</b>
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        ◈
+                    </div>
+
+                    <span>
+                        Research
+                    </span>
+
+                </div>
+
+                <b>→</b>
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        ✓
+                    </div>
+
+                    <span>
+                        Results
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= STATS ================= -->
+
+        <section class="stats">
+
+            <div class="stat">
+
+                <strong id="statJobs">
+                    0
+                </strong>
+
+                <span>
+                    Jobs Found
+                </span>
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong id="statCompanies">
+                    0
+                </strong>
+
+                <span>
+                    Companies
+                </span>
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong id="statHR">
+                    0
+                </strong>
+
+                <span>
+                    HR Signals
+                </span>
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong id="statTime">
+                    —
+                </strong>
+
+                <span>
+                    Search Status
+                </span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

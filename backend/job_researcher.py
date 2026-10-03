@@ -1,31 +1,43 @@
 import os
+import re
 import requests
 
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from dotenv import load_dotenv
-from tavily import TavilyClient
 
 load_dotenv()
 
-tavily = TavilyClient(
-    api_key=os.getenv("TAVILY_API_KEY")
-)
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
+
+# =========================================================
+# SCRAPE JOB PAGE
+# =========================================================
 
 def scrape_job_page(job):
-    """
-    Open the job page and extract job information.
-    """
 
-    url = job["url"]
+    url = job.get("url")
+
+    if not url:
+        return {
+            "status": "failed",
+            "error": "Job URL missing"
+        }
 
     try:
+
         response = requests.get(
             url,
-            timeout=10,
+            timeout=15,
             headers={
-                "User-Agent": "Mozilla/5.0"
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) "
+                    "Chrome/154.0 Safari/537.36"
+                )
             }
         )
 
@@ -41,7 +53,10 @@ def scrape_job_page(job):
             "html.parser"
         )
 
-        # Page title
+        # -----------------------------
+        # TITLE
+        # -----------------------------
+
         page_title = ""
 
         if soup.title:
@@ -49,19 +64,27 @@ def scrape_job_page(job):
                 strip=True
             )
 
-        # Extract all visible text
+        job_title = job.get("title", "")
+
+        # -----------------------------
+        # PAGE TEXT
+        # -----------------------------
+
         page_text = soup.get_text(
             " ",
             strip=True
         )
 
-        # --------------------------------
+        # -----------------------------
         # FIND APPLY LINK
-        # --------------------------------
+        # -----------------------------
 
         apply_link = None
 
-        for link in soup.find_all("a", href=True):
+        for link in soup.find_all(
+            "a",
+            href=True
+        ):
 
             text = link.get_text(
                 " ",
@@ -72,7 +95,6 @@ def scrape_job_page(job):
 
             if (
                 "apply" in text
-                or "apply now" in text
                 or "submit application" in text
             ):
 
@@ -83,13 +105,46 @@ def scrape_job_page(job):
 
                 break
 
+        # -----------------------------
+        # TRY TO FIND COMPANY
+        # -----------------------------
+
+        company = None
+
+        meta_company = soup.find(
+            "meta",
+            attrs={
+                "property": "og:site_name"
+            }
+        )
+
+        if meta_company:
+            company = meta_company.get(
+                "content"
+            )
+
+        if not company:
+
+            meta_company = soup.find(
+                "meta",
+                attrs={
+                    "name": "author"
+                }
+            )
+
+            if meta_company:
+                company = meta_company.get(
+                    "content"
+                )
+
         return {
             "status": "success",
-            "job_title": job.get("title"),
+            "job_title": job_title,
             "job_url": url,
             "page_title": page_title,
+            "company": company,
             "official_apply_link": apply_link,
-            "page_content": page_text[:8000]
+            "job_description": page_text[:12000]
         }
 
     except Exception as e:
@@ -101,130 +156,304 @@ def scrape_job_page(job):
         }
 
 
-def find_company_and_hr(job_data):
-    """
-    Use Tavily to identify the company and
-    find publicly available recruiting information.
-    """
+# =========================================================
+# COMPANY + PUBLIC RECRUITER RESEARCH
+# =========================================================
 
-    job_url = job_data["job_url"]
+def research_company(job_data):
+
+    job_url = job_data.get("job_url")
+    job_title = job_data.get("job_title")
+    page_text = job_data.get("job_description", "")
 
     query = f"""
-    Research this job posting:
+Research this specific job posting:
 
-    {job_url}
+Job:
+{job_title}
 
-    Identify:
+URL:
+{job_url}
 
-    1. Company name
-    2. Job title
-    3. Job location
-    4. Publicly listed recruiter or talent acquisition contact
-    5. Public professional recruiting email if available
-    6. Public business phone number if explicitly listed
-    7. Official company careers page
+Find reliable PUBLIC information about:
 
-    Only use publicly available professional information.
+1. Company name
+2. Company official website
+3. Official careers page
+4. Job location
+5. Public recruiter or talent acquisition professional
+6. Recruiter's professional role
+7. Public professional recruiting email
+8. Public business recruiting phone number
 
-    Do not guess:
-    - personal phone numbers
-    - personal emails
-    - private contact information
+IMPORTANT:
 
-    Prefer the company's official website
-    and official careers pages.
-    """
+Only use publicly available professional information.
+
+Do NOT guess or infer:
+- private phone numbers
+- personal email addresses
+- private contact information
+
+Prefer:
+- official company website
+- official careers page
+- official company contact page
+- publicly listed professional recruiting information
+
+If information cannot be verified publicly, return null.
+"""
 
     try:
 
-        response = tavily.search(
-            query=query,
-            search_depth="advanced",
-            max_results=5
+        response = requests.post(
+            "https://api.tavily.com/search",
+            headers={
+                "Content-Type": "application/json"
+            },
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "search_depth": "advanced",
+                "max_results": 5,
+                "include_answer": True
+            },
+            timeout=30
         )
 
-        sources = []
+        response.raise_for_status()
 
-        for result in response.get(
+        data = response.json()
+
+        sources = data.get(
             "results",
             []
-        ):
+        )
 
-            sources.append({
-                "title": result.get("title"),
-                "url": result.get("url"),
-                "content": result.get("content")
-            })
+        # Combine Tavily research text
+        research_text = ""
 
-        return sources
+        for result in sources:
+
+            research_text += (
+                "\n"
+                + result.get("title", "")
+                + "\n"
+                + result.get("content", "")
+                + "\n"
+                + result.get("url", "")
+                + "\n"
+            )
+
+        return {
+            "research_text": research_text[:15000],
+            "sources": [
+                {
+                    "title": r.get("title"),
+                    "url": r.get("url"),
+                    "content": r.get("content")
+                }
+                for r in sources
+            ]
+        }
 
     except Exception as e:
 
         return {
-            "error": str(e)
+            "error": str(e),
+            "research_text": "",
+            "sources": []
         }
 
 
-def research_job(job):
-    """
-    Complete research for one job.
-    """
+# =========================================================
+# EXTRACT SIMPLE CONTACT INFORMATION
+# =========================================================
 
-    # Step 1:
-    # Scrape the actual job page
+def extract_contacts(text):
+
+    emails = re.findall(
+        r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+        text
+    )
+
+    phones = re.findall(
+        r"(?:\+91[\s-]?)?[6-9]\d{9}",
+        text
+    )
+
+    return {
+        "emails": list(dict.fromkeys(emails)),
+        "phones": list(dict.fromkeys(phones))
+    }
+
+
+# =========================================================
+# RESEARCH ONE JOB
+# =========================================================
+
+def research_job(job):
+
+    # ---------------------------------
+    # 1. Scrape actual job page
+    # ---------------------------------
 
     scraped = scrape_job_page(job)
 
-    if scraped["status"] != "success":
-
+    if scraped.get("status") != "success":
         return scraped
 
-    # Step 2:
-    # Research company + public HR information
+    # ---------------------------------
+    # 2. Public company/HR research
+    # ---------------------------------
 
-    hr_information = find_company_and_hr(
+    company_research = research_company(
         scraped
     )
 
-    # Step 3:
-    # Combine everything
+    research_text = company_research.get(
+        "research_text",
+        ""
+    )
+
+    contacts = extract_contacts(
+        research_text
+    )
+
+    # ---------------------------------
+    # 3. Company fallback
+    # ---------------------------------
+
+    company = scraped.get("company")
+
+    if not company:
+
+        # Try to get company from job title / research
+        for result in company_research.get(
+            "sources",
+            []
+        ):
+
+            title = result.get(
+                "title",
+                ""
+            )
+
+            content = result.get(
+                "content",
+                ""
+            )
+
+            combined = (
+                title + " " + content
+            )
+
+            # Basic company extraction
+            match = re.search(
+                r"(?:company|employer)\s*[:\-]\s*([A-Za-z0-9& .'-]{2,80})",
+                combined,
+                re.IGNORECASE
+            )
+
+            if match:
+
+                company = match.group(
+                    1
+                ).strip()
+
+                break
+
+    if not company:
+        company = "Company not identified"
+
+
+    # ---------------------------------
+    # 4. Recruiter information
+    # ---------------------------------
+
+    recruiter = {
+        "name": None,
+        "role": None,
+        "email": (
+            contacts["emails"][0]
+            if contacts["emails"]
+            else None
+        ),
+        "phone": (
+            contacts["phones"][0]
+            if contacts["phones"]
+            else None
+        )
+    }
+
+
+    # ---------------------------------
+    # 5. FINAL RESULT
+    # ---------------------------------
 
     return {
+
         "job_title": scraped.get(
             "job_title"
+        ),
+
+        "title": scraped.get(
+            "job_title"
+        ),
+
+        "company": company,
+
+        "location": job.get(
+            "location",
+            "Not listed"
         ),
 
         "job_url": scraped.get(
             "job_url"
         ),
 
-        "official_apply_link": scraped.get(
-            "official_apply_link"
+        "official_apply_link": (
+            scraped.get(
+                "official_apply_link"
+            )
         ),
 
-        "page_title": scraped.get(
-            "page_title"
+        "description": (
+            scraped.get(
+                "job_description"
+            )
         ),
 
-        "job_description": scraped.get(
-            "page_content"
+        "job_description": (
+            scraped.get(
+                "job_description"
+            )
         ),
 
-        "company_research": hr_information
+        "recruiter": recruiter,
+
+        "company_research": (
+            company_research
+        )
     }
 
 
+# =========================================================
+# RESEARCH ALL JOBS
+# =========================================================
+
 def research_jobs(jobs):
-    """
-    Research multiple jobs.
-    """
 
     results = []
 
     for job in jobs:
 
-        result = research_job(job)
+        result = research_job(
+            job
+        )
 
-        results.append(result)
+        results.append(
+            result
+        )
 
     return results

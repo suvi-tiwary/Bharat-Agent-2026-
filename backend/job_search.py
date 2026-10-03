@@ -9,19 +9,43 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 def search_jobs(profile):
 
-    roles = ", ".join(profile.get("job_roles", []))
-    skills = ", ".join(profile.get("skills", []))
-    locations = ", ".join(profile.get("locations", []))
+    roles = profile.get("job_roles", [])
+    skills = profile.get("skills", [])
+    locations = profile.get("locations", [])
+
+    roles_text = ", ".join(roles)
+    skills_text = ", ".join(skills)
+    locations_text = ", ".join(locations)
 
     query = f"""
-    Find current job openings for {roles}
-    requiring skills like {skills}
-    in {locations}.
+Find individual CURRENT job openings matching this candidate.
 
-    Prefer official company career pages
-    and official job application pages.
-    Only return currently relevant job openings.
-    """
+Roles:
+{roles_text}
+
+Skills:
+{skills_text}
+
+Locations:
+{locations_text}
+
+IMPORTANT:
+Return individual job postings, NOT:
+- search result pages
+- category pages
+- job listing aggregators
+- "page 2/page 3" pages
+- general career pages
+
+Prefer:
+- official company job pages
+- Greenhouse job pages
+- Lever job pages
+- Workday job pages
+- individual company career postings
+
+Find at least 10 relevant individual job postings if available.
+"""
 
     response = requests.post(
         "https://api.tavily.com/search",
@@ -31,8 +55,9 @@ def search_jobs(profile):
         json={
             "api_key": TAVILY_API_KEY,
             "query": query,
-            "search_depth": "basic",
-            "max_results": 5
+            "search_depth": "advanced",
+            "max_results": 10,
+            "include_answer": False
         },
         timeout=30
     )
@@ -45,12 +70,39 @@ def search_jobs(profile):
 
     for result in data.get("results", []):
 
-        job = {
-            "title": result.get("title", ""),
-            "url": result.get("url", ""),
-            "description": result.get("content", "")
-        }
+        title = result.get("title", "")
+        url = result.get("url", "")
+        description = result.get("content", "")
 
-        jobs.append(job)
+        if not url:
+            continue
 
-    return jobs
+        # Remove obvious search/category pages
+        bad_words = [
+            "page 2",
+            "page 3",
+            "page 4",
+            "page 5",
+            "search",
+            "search-results",
+            "job-search",
+            "jobs-in-",
+            "jobs?keyword="
+        ]
+
+        url_lower = url.lower()
+        title_lower = title.lower()
+
+        if any(word in url_lower for word in bad_words):
+            continue
+
+        if "page 3" in title_lower or "page 2" in title_lower:
+            continue
+
+        jobs.append({
+            "title": title,
+            "url": url,
+            "description": description
+        })
+
+    return jobs[:10]
